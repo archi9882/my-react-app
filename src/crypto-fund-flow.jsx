@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Sankey, Tooltip, ResponsiveContainer } from "recharts";
+import { Chord } from "@nivo/chord";
 
 const SECTOR_MAP = [
   { id: "decentralized-finance-defi", name: "DeFi", icon: "🏦", color: "#00D4AA" },
@@ -63,10 +63,10 @@ function computeFlows(categories) {
   return flows.sort((a, b) => b.amount - a.amount).slice(0, 15);
 }
 
-// Sankey 圖數據轉換
-function flowsToSankeyData(flows, categories) {
+// 弦圖數據轉換 - 轉為矩陣格式
+function flowsToChordData(flows, categories) {
   if (!flows || flows.length === 0) {
-    return { nodes: [], links: [] };
+    return { nodes: [], matrix: [] };
   }
 
   // 收集所有出現的板塊
@@ -76,25 +76,33 @@ function flowsToSankeyData(flows, categories) {
     nodeSet.add(flow.to);
   });
 
-  // 創建節點陣列
   const nodeIds = Array.from(nodeSet);
+
+  // 創建節點陣列（包含顏色）
   const nodes = nodeIds.map(id => {
     const cat = categories.find(c => c.id === id);
     return {
-      name: cat?.name || id,
       id: id,
+      label: cat?.name || id,
       color: cat?.color || "#666"
     };
   });
 
-  // 創建連結陣列（Sankey 需要索引而非 ID）
-  const links = flows.map(flow => ({
-    source: nodeIds.indexOf(flow.from),
-    target: nodeIds.indexOf(flow.to),
-    value: Math.max(1, Math.round(flow.amount / 1e8)) // 縮放值以適配視覺化
-  }));
+  // 創建矩陣（弦圖需要矩陣格式）
+  const size = nodeIds.length;
+  const matrix = Array(size).fill(null).map(() => Array(size).fill(0));
 
-  return { nodes, links };
+  flows.forEach(flow => {
+    const fromIdx = nodeIds.indexOf(flow.from);
+    const toIdx = nodeIds.indexOf(flow.to);
+    // 正規化值
+    const value = Math.max(0.1, Math.round(flow.amount / 1e8));
+    matrix[fromIdx][toIdx] = value;
+    // 弦圖是雙向的
+    matrix[toIdx][fromIdx] = value;
+  });
+
+  return { nodes, matrix };
 }
 
 // Robust JSON extractor — handles markdown fences, surrounding prose, etc.
@@ -874,118 +882,82 @@ export default function CryptoFundFlow() {
           </div>
           {filteredFlows.length > 0 ? (
             (() => {
-              const sankeyData = flowsToSankeyData(filteredFlows, enrichedCategories);
+              const chordData = flowsToChordData(filteredFlows, enrichedCategories);
               return (
-                <div style={{ width: "100%", minHeight: 500, background: "#0a0a0f", borderRadius: 8, padding: "20px", marginBottom: 16 }}>
-                  {/* 圖表 */}
-                  <svg width="100%" height={450} style={{ overflow: "visible" }}>
-                    <defs>
-                      {/* 線性漸變 */}
-                      {sankeyData.links.map((link, i) => {
-                        const fromNode = sankeyData.nodes[link.source];
-                        const toNode = sankeyData.nodes[link.target];
-                        const fromCat = enrichedCategories.find(c => c.id === fromNode.id);
-                        const toCat = enrichedCategories.find(c => c.id === toNode.id);
-                        const fromColor = fromCat?.color || "#666";
-                        const toColor = toCat?.color || "#666";
+                <div style={{ width: "100%", minHeight: 600, background: "#0a0a0f", borderRadius: 8, padding: "20px", marginBottom: 16 }}>
+                  {/* 弦圖 */}
+                  <div style={{ width: "100%", height: 550 }}>
+                    <Chord
+                      data={chordData.matrix}
+                      keys={chordData.nodes.map(n => n.label)}
+                      colors={chordData.nodes.map(n => n.color)}
+                      margin={{ top: 40, right: 40, bottom: 40, left: 40 }}
+                      valueFormat=".2f"
+                      padAngle={0.02}
+                      innerRadiusRatio={0.96}
+                      arcOpacity={0.8}
+                      arcHoverOpacity={1}
+                      ribbonOpacity={0.25}
+                      ribbonHoverOpacity={0.8}
+                      ribbonBlendMode="multiply"
+                      theme={{
+                        background: "transparent",
+                        axis: {
+                          domain: {
+                            line: {
+                              stroke: "#333",
+                              strokeWidth: 1,
+                            },
+                          },
+                          ticks: {
+                            line: {
+                              stroke: "#333",
+                              strokeWidth: 1,
+                            },
+                            text: {
+                              fill: "#e0e0e0",
+                              fontSize: 11,
+                              fontWeight: 600,
+                            },
+                          },
+                          legend: {
+                            text: {
+                              fill: "#e0e0e0",
+                            },
+                          },
+                        },
+                        grid: {
+                          line: {
+                            stroke: "#222",
+                          },
+                        },
+                        legends: {
+                          text: {
+                            fill: "#e0e0e0",
+                          },
+                        },
+                        tooltip: {
+                          container: {
+                            background: "#1a1a2e",
+                            color: "#e0e0e0",
+                            border: "1px solid #444",
+                            borderRadius: "4px",
+                            boxShadow: "0 4px 8px rgba(0,0,0,0.3)",
+                          },
+                        },
+                      }}
+                      tooltipFormat={v => `${parseFloat(v).toFixed(1)}`}
+                    />
+                  </div>
 
-                        return (
-                          <linearGradient
-                            key={`grad-${i}`}
-                            id={`linkGradient-${i}`}
-                            x1="0%"
-                            y1="0%"
-                            x2="100%"
-                            y2="0%"
-                          >
-                            <stop offset="0%" stopColor={fromColor} stopOpacity={0.6} />
-                            <stop offset="100%" stopColor={toColor} stopOpacity={0.6} />
-                          </linearGradient>
-                        );
-                      })}
-                    </defs>
-
-                    {/* 手動繪製連結和節點 */}
-                    <g>
-                      {/* 連結 */}
-                      {sankeyData.links.map((link, i) => {
-                        const fromNode = sankeyData.nodes[link.source];
-                        const toNode = sankeyData.nodes[link.target];
-                        const isHovered = hoveredLink === i;
-                        const opacity = hoveredLink === null ? 0.3 : (isHovered ? 0.8 : 0.05);
-
-                        return (
-                          <path
-                            key={`link-${i}`}
-                            d={`M 150,${100 + fromNode.y} L 280,${100 + toNode.y}`}
-                            fill="none"
-                            stroke={`url(#linkGradient-${i})`}
-                            strokeWidth={Math.max(1, link.value / 10)}
-                            opacity={opacity}
-                            onMouseEnter={() => setHoveredLink(i)}
-                            onMouseLeave={() => setHoveredLink(null)}
-                            style={{
-                              transition: "opacity 0.2s ease",
-                              cursor: "pointer",
-                            }}
-                          />
-                        );
-                      })}
-
-                      {/* 節點 */}
-                      {sankeyData.nodes.map((node, i) => {
-                        const cat = enrichedCategories.find(c => c.id === node.id);
-                        const nodeColor = cat?.color || "#666";
-                        const isHovered = hoveredNode === i;
-                        const x = i < sankeyData.nodes.length / 2 ? 80 : 320;
-                        const y = 100 + (i % Math.ceil(sankeyData.nodes.length / 2)) * 60;
-
-                        return (
-                          <g
-                            key={`node-${i}`}
-                            onMouseEnter={() => setHoveredNode(i)}
-                            onMouseLeave={() => setHoveredNode(null)}
-                            style={{ cursor: "pointer" }}
-                          >
-                            {/* 節點矩形 */}
-                            <rect
-                              x={x}
-                              y={y}
-                              width={50}
-                              height={20}
-                              fill={nodeColor}
-                              opacity={isHovered ? 1 : 0.7}
-                              rx={4}
-                              style={{
-                                transition: "all 0.2s ease",
-                                filter: isHovered ? `drop-shadow(0 0 8px ${nodeColor})` : "none",
-                              }}
-                            />
-
-                            {/* 節點標籤 */}
-                            <text
-                              x={x + 70}
-                              y={y + 10}
-                              fontSize="11"
-                              fontWeight="600"
-                              fill="#e0e0e0"
-                              style={{ pointerEvents: "none" }}
-                            >
-                              {node.name}
-                            </text>
-                          </g>
-                        );
-                      })}
-                    </g>
-                  </svg>
-
-                  {/* 圖例和說明 */}
-                  <div style={{ marginTop: 16, fontSize: 10, color: "#999", lineHeight: 1.6 }}>
-                    <div>💡 <strong>交互說明：</strong></div>
-                    <div>• 懸停線條 → 高亮流向，顯示流向規模</div>
-                    <div>• 懸停節點 → 突出該板塊，顯示光暈效果</div>
-                    <div>• 線條寬度 = 資金流向規模</div>
-                    <div>• 線條顏色 = 來源板塊顏色</div>
+                  {/* 互動說明 */}
+                  <div style={{ marginTop: 16, fontSize: 10, color: "#ccc", lineHeight: 1.8 }}>
+                    <div style={{ fontWeight: 600, marginBottom: 8 }}>💡 弦圖說明：</div>
+                    <div>• 圓周上的弧 = 各板塊</div>
+                    <div>• 弦的寬度 = 資金流向規模</div>
+                    <div>• 弦的顏色 = 來源板塊顏色</div>
+                    <div>• 懸停弦線 → 高亮流向關係</div>
+                    <div>• 懸停弧 → 突出該板塊的所有流向</div>
                   </div>
                 </div>
               );
