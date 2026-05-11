@@ -256,6 +256,10 @@ export default function CryptoFundFlow() {
   const [loadingCoins, setLoadingCoins] = useState(false);
   const [loadProgress, setLoadProgress] = useState("");
   const [showGuide, setShowGuide] = useState(false);
+  const [zoom, setZoom] = useState(() => {
+    const saved = localStorage.getItem("app-zoom");
+    return saved ? parseFloat(saved) : 100;
+  });
 
   const enrichedCategories = useMemo(() => {
     return categories.map(c => {
@@ -269,6 +273,19 @@ export default function CryptoFundFlow() {
       };
     });
   }, [categories]);
+
+  const handleZoom = useCallback((delta) => {
+    setZoom(prev => {
+      const newZoom = Math.max(50, Math.min(200, prev + delta));
+      localStorage.setItem("app-zoom", newZoom.toString());
+      return newZoom;
+    });
+  }, []);
+
+  const resetZoom = useCallback(() => {
+    setZoom(100);
+    localStorage.setItem("app-zoom", "100");
+  }, []);
 
   const fetchData = useCallback(async (isRefresh = false) => {
     try {
@@ -364,6 +381,9 @@ export default function CryptoFundFlow() {
     <div style={{
       minHeight: "100vh", background: "#0A0A0F",
       color: "#E0E0E0", fontFamily: "'DM Sans', 'Manrope', sans-serif",
+      transform: `scale(${zoom / 100})`,
+      transformOrigin: "top center",
+      transition: "transform 0.2s ease",
     }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;600;700&display=swap');
@@ -374,6 +394,31 @@ export default function CryptoFundFlow() {
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* 響應式布局 */
+        .sector-grid {
+          display: grid;
+          gap: 6px;
+          grid-template-columns: repeat(6, 1fr);
+        }
+
+        @media (max-width: 1024px) {
+          .sector-grid {
+            grid-template-columns: repeat(4, 1fr);
+          }
+        }
+
+        @media (max-width: 768px) {
+          .sector-grid {
+            grid-template-columns: repeat(3, 1fr);
+          }
+        }
+
+        @media (max-width: 480px) {
+          .sector-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
       `}</style>
 
       {/* Header */}
@@ -396,6 +441,21 @@ export default function CryptoFundFlow() {
             </p>
           </div>
           <div style={{ display: "flex", gap: 6 }}>
+            <button onClick={() => handleZoom(-10)} style={{
+              fontSize: 12, color: "#888", background: "#111",
+              border: "1px solid #222", padding: "6px 8px", borderRadius: 8,
+              cursor: "pointer", fontWeight: 600, minWidth: 32,
+            }}>−</button>
+            <button onClick={resetZoom} style={{
+              fontSize: 11, color: "#666", background: "#111",
+              border: "1px solid #222", padding: "6px 10px", borderRadius: 8,
+              cursor: "pointer", fontWeight: 600, minWidth: 50,
+            }}>{zoom}%</button>
+            <button onClick={() => handleZoom(10)} style={{
+              fontSize: 12, color: "#888", background: "#111",
+              border: "1px solid #222", padding: "6px 8px", borderRadius: 8,
+              cursor: "pointer", fontWeight: 600, minWidth: 32,
+            }}>+</button>
             <button onClick={() => setShowGuide(!showGuide)} style={{
               fontSize: 12, color: showGuide ? "#7B61FF" : "#666",
               background: showGuide ? "#7B61FF18" : "#111",
@@ -556,7 +616,7 @@ export default function CryptoFundFlow() {
         <div style={{ fontSize: 10, color: "#444", fontWeight: 600, letterSpacing: "0.12em", marginBottom: 10 }}>
           板塊總覽 — 點擊查看 TOP 5 代幣
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 6 }}>
+        <div className="sector-grid">
           {enrichedCategories.map((cat, i) => {
             const net = cat.market_cap_change_24h || 0;
             const isSelected = selectedSector === cat.id;
