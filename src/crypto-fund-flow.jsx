@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { Sankey, Sink, Source, Link, Node, NodeProps } from "recharts";
 
 const SECTOR_MAP = [
   { id: "decentralized-finance-defi", name: "DeFi", icon: "🏦", color: "#00D4AA" },
@@ -60,6 +61,40 @@ function computeFlows(categories) {
     }
   }
   return flows.sort((a, b) => b.amount - a.amount).slice(0, 15);
+}
+
+// Sankey 圖數據轉換
+function flowsToSankeyData(flows, categories) {
+  if (!flows || flows.length === 0) {
+    return { nodes: [], links: [] };
+  }
+
+  // 收集所有出現的板塊
+  const nodeSet = new Set();
+  flows.forEach(flow => {
+    nodeSet.add(flow.from);
+    nodeSet.add(flow.to);
+  });
+
+  // 創建節點陣列
+  const nodeIds = Array.from(nodeSet);
+  const nodes = nodeIds.map(id => {
+    const cat = categories.find(c => c.id === id);
+    return {
+      name: cat?.name || id,
+      id: id,
+      color: cat?.color || "#666"
+    };
+  });
+
+  // 創建連結陣列（Sankey 需要索引而非 ID）
+  const links = flows.map(flow => ({
+    source: nodeIds.indexOf(flow.from),
+    target: nodeIds.indexOf(flow.to),
+    value: Math.max(1, Math.round(flow.amount / 1e8)) // 縮放值以適配視覺化
+  }));
+
+  return { nodes, links };
 }
 
 // Robust JSON extractor — handles markdown fences, surrounding prose, etc.
@@ -744,7 +779,7 @@ export default function CryptoFundFlow() {
         </div>
       </div>
 
-      {/* Flow List */}
+      {/* Sankey Flow Diagram */}
       {flows.length > 0 && (
         <div style={{ padding: "12px 16px 24px" }}>
           <div style={{
@@ -753,7 +788,7 @@ export default function CryptoFundFlow() {
             <div style={{ fontSize: 10, color: "#aaa", fontWeight: 600, letterSpacing: "0.12em" }}>
               {selectedSector
                 ? `${enrichedCategories.find(c => c.id === selectedSector)?.icon} ${enrichedCategories.find(c => c.id === selectedSector)?.sectorName} 相關流動`
-                : "推測板塊間資金流動"}
+                : "板塊間資金流動 (Sankey 圖)"}
             </div>
             {selectedSector && (
               <button onClick={() => setSelectedSector(null)} style={{
@@ -762,19 +797,38 @@ export default function CryptoFundFlow() {
               }}>清除篩選</button>
             )}
           </div>
-          <div style={{ fontSize: 9, color: "#e0e0e0", marginBottom: 8, lineHeight: 1.5 }}>
-            💡 流動方向根據板塊 24h 市值增減推算：市值下降的板塊 → 市值上升的板塊
+          <div style={{ fontSize: 9, color: "#e0e0e0", marginBottom: 12, lineHeight: 1.5 }}>
+            💡 線條寬度代表資金流向規模：市值下降 → 市值上升
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {filteredFlows.map((flow, i) => (
-              <FlowArrow key={`${flow.from}-${flow.to}-${i}`} flow={flow} sectors={enrichedCategories} maxAmount={maxFlow} />
-            ))}
-            {filteredFlows.length === 0 && (
-              <div style={{ fontSize: 12, color: "#aaa", textAlign: "center", padding: 20 }}>
-                此篩選無明顯流動
-              </div>
-            )}
-          </div>
+          {filteredFlows.length > 0 ? (
+            (() => {
+              const sankeyData = flowsToSankeyData(filteredFlows, enrichedCategories);
+              return (
+                <div style={{ width: "100%", height: 400, background: "#0a0a0f", borderRadius: 8, padding: "10px 0", overflowX: "auto" }}>
+                  <Sankey
+                    width={Math.max(600, window.innerWidth - 40)}
+                    height={400}
+                    data={sankeyData}
+                    node={{ fill: "#8884d8", fillOpacity: 1, stroke: "#333", strokeWidth: 1 }}
+                    link={{ stroke: "rgba(136, 132, 216, 0.3)", strokeOpacity: 0.5 }}
+                    nodePadding={150}
+                    margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+                  >
+                    <defs>
+                      <linearGradient id="colorGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#00D4AA" stopOpacity={0.6} />
+                        <stop offset="100%" stopColor="#7B61FF" stopOpacity={0.6} />
+                      </linearGradient>
+                    </defs>
+                  </Sankey>
+                </div>
+              );
+            })()
+          ) : (
+            <div style={{ fontSize: 12, color: "#aaa", textAlign: "center", padding: 40 }}>
+              此篩選無明顯流動
+            </div>
+          )}
         </div>
       )}
 
