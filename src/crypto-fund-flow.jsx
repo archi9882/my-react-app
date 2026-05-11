@@ -237,6 +237,76 @@ const Sparkline = ({ data, color, width = 80, height = 28 }) => {
   );
 };
 
+// 自定義 Sankey 節點（帶顏色和標籤）
+const CustomNode = ({ x, y, width, height, index, payload, setHoveredNode, hoveredNode, categories }) => {
+  const cat = categories.find(c => c.id === payload.id);
+  const isHovered = hoveredNode === index;
+  const nodeColor = cat?.color || "#666";
+
+  return (
+    <g
+      onMouseEnter={() => setHoveredNode(index)}
+      onMouseLeave={() => setHoveredNode(null)}
+      style={{ cursor: "pointer" }}
+    >
+      {/* 節點矩形 */}
+      <rect
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        fill={nodeColor}
+        opacity={isHovered ? 1 : 0.7}
+        rx={4}
+        style={{
+          transition: "all 0.2s ease",
+          filter: isHovered ? `drop-shadow(0 0 8px ${nodeColor})` : "none",
+        }}
+      />
+
+      {/* 節點標籤 */}
+      <text
+        x={x + width + 8}
+        y={y + height / 2}
+        textAnchor="start"
+        dominantBaseline="middle"
+        fontSize="12"
+        fontWeight="600"
+        fill="#e0e0e0"
+        style={{ pointerEvents: "none" }}
+      >
+        {payload.name}
+      </text>
+    </g>
+  );
+};
+
+// 自定義 Sankey 連結（帶顏色漸變和交互）
+const CustomLink = ({ sourceX, sourceY, sourceControlX, targetX, targetY, targetControlX, linkWidth, index, payload, hoveredLink, setHoveredLink, fromColor }) => {
+  const isHovered = hoveredLink === index;
+  const isRelated = hoveredLink !== null && hoveredLink === index;
+  const opacity = hoveredLink === null ? 0.3 : (isRelated ? 0.8 : 0.05);
+
+  return (
+    <path
+      d={`
+        M${sourceX},${sourceY}
+        C${sourceControlX},${sourceY} ${targetControlX},${targetY} ${targetX},${targetY}
+      `}
+      fill="none"
+      stroke={fromColor}
+      strokeWidth={Math.max(1, linkWidth)}
+      opacity={opacity}
+      onMouseEnter={() => setHoveredLink(index)}
+      onMouseLeave={() => setHoveredLink(null)}
+      style={{
+        transition: "opacity 0.2s ease, stroke-width 0.2s ease",
+        cursor: "pointer",
+      }}
+    />
+  );
+};
+
 const FlowArrow = ({ flow, sectors, maxAmount }) => {
   const fromS = sectors.find(s => s.id === flow.from);
   const toS = sectors.find(s => s.id === flow.to);
@@ -295,6 +365,8 @@ export default function CryptoFundFlow() {
     const saved = localStorage.getItem("app-zoom");
     return saved ? parseFloat(saved) : 100;
   });
+  const [hoveredLink, setHoveredLink] = useState(null);
+  const [hoveredNode, setHoveredNode] = useState(null);
 
   const enrichedCategories = useMemo(() => {
     return categories.map(c => {
@@ -804,22 +876,117 @@ export default function CryptoFundFlow() {
             (() => {
               const sankeyData = flowsToSankeyData(filteredFlows, enrichedCategories);
               return (
-                <div style={{ width: "100%", height: 450, background: "#0a0a0f", borderRadius: 8, padding: "20px 0", overflowX: "auto" }}>
-                  <ResponsiveContainer width="100%" height={450}>
-                    <Sankey
-                      data={sankeyData}
-                      node={{ fill: "#8884d8", fillOpacity: 0.8, stroke: "#444", strokeWidth: 1 }}
-                      link={{ stroke: "rgba(0, 212, 170, 0.25)", strokeOpacity: 0.5 }}
-                      nodePadding={200}
-                      margin={{ top: 20, right: 160, bottom: 20, left: 160 }}
-                    >
-                      <Tooltip
-                        contentStyle={{ backgroundColor: "#1a1a2e", border: "1px solid #444", borderRadius: 8 }}
-                        labelStyle={{ color: "#e0e0e0" }}
-                        cursor={{ stroke: "#00D4AA", strokeWidth: 2 }}
-                      />
-                    </Sankey>
-                  </ResponsiveContainer>
+                <div style={{ width: "100%", minHeight: 500, background: "#0a0a0f", borderRadius: 8, padding: "20px", marginBottom: 16 }}>
+                  {/* 圖表 */}
+                  <svg width="100%" height={450} style={{ overflow: "visible" }}>
+                    <defs>
+                      {/* 線性漸變 */}
+                      {sankeyData.links.map((link, i) => {
+                        const fromNode = sankeyData.nodes[link.source];
+                        const toNode = sankeyData.nodes[link.target];
+                        const fromCat = enrichedCategories.find(c => c.id === fromNode.id);
+                        const toCat = enrichedCategories.find(c => c.id === toNode.id);
+                        const fromColor = fromCat?.color || "#666";
+                        const toColor = toCat?.color || "#666";
+
+                        return (
+                          <linearGradient
+                            key={`grad-${i}`}
+                            id={`linkGradient-${i}`}
+                            x1="0%"
+                            y1="0%"
+                            x2="100%"
+                            y2="0%"
+                          >
+                            <stop offset="0%" stopColor={fromColor} stopOpacity={0.6} />
+                            <stop offset="100%" stopColor={toColor} stopOpacity={0.6} />
+                          </linearGradient>
+                        );
+                      })}
+                    </defs>
+
+                    {/* 手動繪製連結和節點 */}
+                    <g>
+                      {/* 連結 */}
+                      {sankeyData.links.map((link, i) => {
+                        const fromNode = sankeyData.nodes[link.source];
+                        const toNode = sankeyData.nodes[link.target];
+                        const isHovered = hoveredLink === i;
+                        const opacity = hoveredLink === null ? 0.3 : (isHovered ? 0.8 : 0.05);
+
+                        return (
+                          <path
+                            key={`link-${i}`}
+                            d={`M 150,${100 + fromNode.y} L 280,${100 + toNode.y}`}
+                            fill="none"
+                            stroke={`url(#linkGradient-${i})`}
+                            strokeWidth={Math.max(1, link.value / 10)}
+                            opacity={opacity}
+                            onMouseEnter={() => setHoveredLink(i)}
+                            onMouseLeave={() => setHoveredLink(null)}
+                            style={{
+                              transition: "opacity 0.2s ease",
+                              cursor: "pointer",
+                            }}
+                          />
+                        );
+                      })}
+
+                      {/* 節點 */}
+                      {sankeyData.nodes.map((node, i) => {
+                        const cat = enrichedCategories.find(c => c.id === node.id);
+                        const nodeColor = cat?.color || "#666";
+                        const isHovered = hoveredNode === i;
+                        const x = i < sankeyData.nodes.length / 2 ? 80 : 320;
+                        const y = 100 + (i % Math.ceil(sankeyData.nodes.length / 2)) * 60;
+
+                        return (
+                          <g
+                            key={`node-${i}`}
+                            onMouseEnter={() => setHoveredNode(i)}
+                            onMouseLeave={() => setHoveredNode(null)}
+                            style={{ cursor: "pointer" }}
+                          >
+                            {/* 節點矩形 */}
+                            <rect
+                              x={x}
+                              y={y}
+                              width={50}
+                              height={20}
+                              fill={nodeColor}
+                              opacity={isHovered ? 1 : 0.7}
+                              rx={4}
+                              style={{
+                                transition: "all 0.2s ease",
+                                filter: isHovered ? `drop-shadow(0 0 8px ${nodeColor})` : "none",
+                              }}
+                            />
+
+                            {/* 節點標籤 */}
+                            <text
+                              x={x + 70}
+                              y={y + 10}
+                              fontSize="11"
+                              fontWeight="600"
+                              fill="#e0e0e0"
+                              style={{ pointerEvents: "none" }}
+                            >
+                              {node.name}
+                            </text>
+                          </g>
+                        );
+                      })}
+                    </g>
+                  </svg>
+
+                  {/* 圖例和說明 */}
+                  <div style={{ marginTop: 16, fontSize: 10, color: "#999", lineHeight: 1.6 }}>
+                    <div>💡 <strong>交互說明：</strong></div>
+                    <div>• 懸停線條 → 高亮流向，顯示流向規模</div>
+                    <div>• 懸停節點 → 突出該板塊，顯示光暈效果</div>
+                    <div>• 線條寬度 = 資金流向規模</div>
+                    <div>• 線條顏色 = 來源板塊顏色</div>
+                  </div>
                 </div>
               );
             })()
