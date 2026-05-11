@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Sankey, Sink, Source, Link, Node, NodeProps } from "recharts";
+import { Sankey, Tooltip, ResponsiveContainer } from "recharts";
 
 const SECTOR_MAP = [
   { id: "decentralized-finance-defi", name: "DeFi", icon: "🏦", color: "#00D4AA" },
@@ -804,23 +804,22 @@ export default function CryptoFundFlow() {
             (() => {
               const sankeyData = flowsToSankeyData(filteredFlows, enrichedCategories);
               return (
-                <div style={{ width: "100%", height: 400, background: "#0a0a0f", borderRadius: 8, padding: "10px 0", overflowX: "auto" }}>
-                  <Sankey
-                    width={Math.max(600, window.innerWidth - 40)}
-                    height={400}
-                    data={sankeyData}
-                    node={{ fill: "#8884d8", fillOpacity: 1, stroke: "#333", strokeWidth: 1 }}
-                    link={{ stroke: "rgba(136, 132, 216, 0.3)", strokeOpacity: 0.5 }}
-                    nodePadding={150}
-                    margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
-                  >
-                    <defs>
-                      <linearGradient id="colorGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#00D4AA" stopOpacity={0.6} />
-                        <stop offset="100%" stopColor="#7B61FF" stopOpacity={0.6} />
-                      </linearGradient>
-                    </defs>
-                  </Sankey>
+                <div style={{ width: "100%", height: 450, background: "#0a0a0f", borderRadius: 8, padding: "20px 0", overflowX: "auto" }}>
+                  <ResponsiveContainer width="100%" height={450}>
+                    <Sankey
+                      data={sankeyData}
+                      node={{ fill: "#8884d8", fillOpacity: 0.8, stroke: "#444", strokeWidth: 1 }}
+                      link={{ stroke: "rgba(0, 212, 170, 0.25)", strokeOpacity: 0.5 }}
+                      nodePadding={200}
+                      margin={{ top: 20, right: 160, bottom: 20, left: 160 }}
+                    >
+                      <Tooltip
+                        contentStyle={{ backgroundColor: "#1a1a2e", border: "1px solid #444", borderRadius: 8 }}
+                        labelStyle={{ color: "#e0e0e0" }}
+                        cursor={{ stroke: "#00D4AA", strokeWidth: 2 }}
+                      />
+                    </Sankey>
+                  </ResponsiveContainer>
                 </div>
               );
             })()
