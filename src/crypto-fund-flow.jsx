@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Chord } from "@nivo/chord";
 
 const SECTOR_MAP = [
   { id: "decentralized-finance-defi", name: "DeFi", icon: "🏦", color: "#00D4AA" },
@@ -880,91 +879,36 @@ export default function CryptoFundFlow() {
           <div style={{ fontSize: 9, color: "#e0e0e0", marginBottom: 12, lineHeight: 1.5 }}>
             💡 線條寬度代表資金流向規模：市值下降 → 市值上升
           </div>
-          {filteredFlows.length > 0 ? (
-            (() => {
-              const chordData = flowsToChordData(filteredFlows, enrichedCategories);
-              return (
-                <div style={{ width: "100%", minHeight: 600, background: "#0a0a0f", borderRadius: 8, padding: "20px", marginBottom: 16 }}>
-                  {/* 弦圖 */}
-                  <div style={{ width: "100%", height: 550 }}>
-                    <Chord
-                      data={chordData.matrix}
-                      keys={chordData.nodes.map(n => n.label)}
-                      colors={chordData.nodes.map(n => n.color)}
-                      margin={{ top: 40, right: 40, bottom: 40, left: 40 }}
-                      valueFormat=".2f"
-                      padAngle={0.02}
-                      innerRadiusRatio={0.96}
-                      arcOpacity={0.8}
-                      arcHoverOpacity={1}
-                      ribbonOpacity={0.25}
-                      ribbonHoverOpacity={0.8}
-                      ribbonBlendMode="multiply"
-                      theme={{
-                        background: "transparent",
-                        axis: {
-                          domain: {
-                            line: {
-                              stroke: "#333",
-                              strokeWidth: 1,
-                            },
-                          },
-                          ticks: {
-                            line: {
-                              stroke: "#333",
-                              strokeWidth: 1,
-                            },
-                            text: {
-                              fill: "#e0e0e0",
-                              fontSize: 11,
-                              fontWeight: 600,
-                            },
-                          },
-                          legend: {
-                            text: {
-                              fill: "#e0e0e0",
-                            },
-                          },
-                        },
-                        grid: {
-                          line: {
-                            stroke: "#222",
-                          },
-                        },
-                        legends: {
-                          text: {
-                            fill: "#e0e0e0",
-                          },
-                        },
-                        tooltip: {
-                          container: {
-                            background: "#1a1a2e",
-                            color: "#e0e0e0",
-                            border: "1px solid #444",
-                            borderRadius: "4px",
-                            boxShadow: "0 4px 8px rgba(0,0,0,0.3)",
-                          },
-                        },
-                      }}
-                      tooltipFormat={v => `${parseFloat(v).toFixed(1)}`}
-                    />
-                  </div>
-
-                  {/* 互動說明 */}
-                  <div style={{ marginTop: 16, fontSize: 10, color: "#ccc", lineHeight: 1.8 }}>
-                    <div style={{ fontWeight: 600, marginBottom: 8 }}>💡 弦圖說明：</div>
-                    <div>• 圓周上的弧 = 各板塊</div>
-                    <div>• 弦的寬度 = 資金流向規模</div>
-                    <div>• 弦的顏色 = 來源板塊顏色</div>
-                    <div>• 懸停弦線 → 高亮流向關係</div>
-                    <div>• 懸停弧 → 突出該板塊的所有流向</div>
-                  </div>
+          {flows.length > 0 && (
+            <div style={{ padding: "12px 16px 24px" }}>
+              <div style={{
+                display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10,
+              }}>
+                <div style={{ fontSize: 10, color: "#aaa", fontWeight: 600, letterSpacing: "0.12em" }}>
+                  {selectedSector
+                    ? `${enrichedCategories.find(c => c.id === selectedSector)?.icon} ${enrichedCategories.find(c => c.id === selectedSector)?.sectorName} 相關流動`
+                    : "推測板塊間資金流動"}
                 </div>
-              );
-            })()
-          ) : (
-            <div style={{ fontSize: 12, color: "#aaa", textAlign: "center", padding: 40 }}>
-              此篩選無明顯流動
+                {selectedSector && (
+                  <button onClick={() => setSelectedSector(null)} style={{
+                    fontSize: 10, color: "#ccc", background: "#151520", border: "1px solid #222",
+                    padding: "3px 10px", borderRadius: 12, cursor: "pointer",
+                  }}>清除篩選</button>
+                )}
+              </div>
+              <div style={{ fontSize: 9, color: "#e0e0e0", marginBottom: 8, lineHeight: 1.5 }}>
+                💡 流動方向根據板塊 24h 市值增減推算：市值下降的板塊 → 市值上升的板塊
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                {filteredFlows.map((flow, i) => (
+                  <FlowArrow key={`${flow.from}-${flow.to}-${i}`} flow={flow} sectors={enrichedCategories} maxAmount={maxFlow} />
+                ))}
+                {filteredFlows.length === 0 && (
+                  <div style={{ fontSize: 12, color: "#aaa", textAlign: "center", padding: 20 }}>
+                    此篩選無明顯流動
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
