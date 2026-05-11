@@ -215,7 +215,7 @@ const FlowArrow = ({ flow, sectors, maxAmount }) => {
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 4, minWidth: 70 }}>
         <span style={{ fontSize: 15 }}>{fromS.icon}</span>
-        <span style={{ fontSize: 10, color: "#999", fontWeight: 600 }}>{fromS.name}</span>
+        <span style={{ fontSize: 10, color: "#e0e0e0", fontWeight: 600 }}>{fromS.name}</span>
       </div>
       <div style={{ flex: 1, height: thickness + 8, display: "flex", alignItems: "center" }}>
         <div style={{
@@ -232,7 +232,7 @@ const FlowArrow = ({ flow, sectors, maxAmount }) => {
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 4, minWidth: 70, justifyContent: "flex-end" }}>
         <span style={{ fontSize: 15 }}>{toS.icon}</span>
-        <span style={{ fontSize: 10, color: "#999", fontWeight: 600 }}>{toS.name}</span>
+        <span style={{ fontSize: 10, color: "#e0e0e0", fontWeight: 600 }}>{toS.name}</span>
       </div>
       <span style={{
         fontSize: 11, fontWeight: 700, color: "#E0E0E0",
@@ -366,11 +366,11 @@ export default function CryptoFundFlow() {
           borderTop: "3px solid #00D4AA", borderRadius: "50%",
           animation: "spin 1s linear infinite", marginBottom: 20,
         }} />
-        <div style={{ fontSize: 14, color: "#888", marginBottom: 8 }}>正在載入真實市場數據</div>
-        <div style={{ fontSize: 11, color: "#444", animation: "pulse 2s infinite" }}>
+        <div style={{ fontSize: 14, color: "#ddd", marginBottom: 8 }}>正在載入真實市場數據</div>
+        <div style={{ fontSize: 11, color: "#aaa", animation: "pulse 2s infinite" }}>
           {loadProgress || "連接 CoinGecko API..."}
         </div>
-        <div style={{ fontSize: 10, color: "#333", marginTop: 16 }}>
+        <div style={{ fontSize: 10, color: "#e0e0e0", marginTop: 16 }}>
           首次載入可能需要 10-20 秒
         </div>
       </div>
@@ -436,23 +436,23 @@ export default function CryptoFundFlow() {
                 WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
               }}>Crypto Fund Flow</h1>
             </div>
-            <p style={{ fontSize: 13, color: "#555", letterSpacing: "0.03em" }}>
+            <p style={{ fontSize: 13, color: "#bbb", letterSpacing: "0.03em" }}>
               板塊資金流動追蹤 · CoinGecko 即時數據
             </p>
           </div>
           <div style={{ display: "flex", gap: 6 }}>
             <button onClick={() => handleZoom(-10)} style={{
-              fontSize: 12, color: "#888", background: "#111",
+              fontSize: 12, color: "#ddd", background: "#111",
               border: "1px solid #222", padding: "6px 8px", borderRadius: 8,
               cursor: "pointer", fontWeight: 600, minWidth: 32,
             }}>−</button>
             <button onClick={resetZoom} style={{
-              fontSize: 11, color: "#666", background: "#111",
+              fontSize: 11, color: "#ccc", background: "#111",
               border: "1px solid #222", padding: "6px 10px", borderRadius: 8,
               cursor: "pointer", fontWeight: 600, minWidth: 50,
             }}>{zoom}%</button>
             <button onClick={() => handleZoom(10)} style={{
-              fontSize: 12, color: "#888", background: "#111",
+              fontSize: 12, color: "#ddd", background: "#111",
               border: "1px solid #222", padding: "6px 8px", borderRadius: 8,
               cursor: "pointer", fontWeight: 600, minWidth: 32,
             }}>+</button>
@@ -495,7 +495,7 @@ export default function CryptoFundFlow() {
               📖 閱讀指南
             </div>
 
-            <div style={{ fontSize: 13, color: "#888", lineHeight: 1.8 }}>
+            <div style={{ fontSize: 13, color: "#ddd", lineHeight: 1.8 }}>
               <div style={{ marginBottom: 12 }}>
                 <div style={{ color: "#00D4AA", fontWeight: 700, marginBottom: 4 }}>🔹 板塊總覽卡片</div>
                 顯示 12 個主要板塊的市值（MC）、24h 交易量（Vol）和漲跌幅。
@@ -530,7 +530,7 @@ export default function CryptoFundFlow() {
             </div>
 
             <button onClick={() => setShowGuide(false)} style={{
-              marginTop: 14, fontSize: 12, color: "#555", background: "#0a0a12",
+              marginTop: 14, fontSize: 12, color: "#bbb", background: "#0a0a12",
               border: "1px solid #222", padding: "6px 16px", borderRadius: 8,
               cursor: "pointer", width: "100%", fontWeight: 600,
             }}>收起指南</button>
@@ -567,7 +567,7 @@ export default function CryptoFundFlow() {
         )}
 
         {lastUpdate && !refreshing && (
-          <div style={{ fontSize: 11, color: "#444", display: "flex", alignItems: "center", gap: 6 }}>
+          <div style={{ fontSize: 11, color: "#aaa", display: "flex", alignItems: "center", gap: 6 }}>
             <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#00D4AA", animation: "pulse 2s infinite" }} />
             最後更新：{lastUpdate.toLocaleTimeString("zh-TW")}
           </div>
@@ -581,13 +581,13 @@ export default function CryptoFundFlow() {
           background: "#1a1a2e", borderBottom: "1px solid #1a1a2e",
         }}>
           <div style={{ background: "#0d0d15", padding: "12px 16px" }}>
-            <div style={{ fontSize: 9, color: "#555", fontWeight: 600, letterSpacing: "0.1em", marginBottom: 4 }}>板塊總市值</div>
+            <div style={{ fontSize: 9, color: "#bbb", fontWeight: 600, letterSpacing: "0.1em", marginBottom: 4 }}>板塊總市值</div>
             <div style={{ fontSize: 15, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: "#FFF" }}>
               {formatNum(totalMarketCap)}
             </div>
           </div>
           <div style={{ background: "#0d0d15", padding: "12px 16px" }}>
-            <div style={{ fontSize: 9, color: "#555", fontWeight: 600, letterSpacing: "0.1em", marginBottom: 4 }}>最大流入</div>
+            <div style={{ fontSize: 9, color: "#bbb", fontWeight: 600, letterSpacing: "0.1em", marginBottom: 4 }}>最大流入</div>
             {topInflow && (
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <span style={{ fontSize: 14 }}>{topInflow.icon}</span>
@@ -598,7 +598,7 @@ export default function CryptoFundFlow() {
             )}
           </div>
           <div style={{ background: "#0d0d15", padding: "12px 16px" }}>
-            <div style={{ fontSize: 9, color: "#555", fontWeight: 600, letterSpacing: "0.1em", marginBottom: 4 }}>最大流出</div>
+            <div style={{ fontSize: 9, color: "#bbb", fontWeight: 600, letterSpacing: "0.1em", marginBottom: 4 }}>最大流出</div>
             {topOutflow && (
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <span style={{ fontSize: 14 }}>{topOutflow.icon}</span>
@@ -613,7 +613,7 @@ export default function CryptoFundFlow() {
 
       {/* Sector Cards */}
       <div style={{ padding: "16px 16px 8px" }}>
-        <div style={{ fontSize: 10, color: "#444", fontWeight: 600, letterSpacing: "0.12em", marginBottom: 10 }}>
+        <div style={{ fontSize: 10, color: "#aaa", fontWeight: 600, letterSpacing: "0.12em", marginBottom: 10 }}>
           板塊總覽 — 點擊查看 TOP 5 代幣
         </div>
         <div className="sector-grid">
@@ -642,8 +642,8 @@ export default function CryptoFundFlow() {
                   </span>
                 </div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: "#ddd", marginBottom: 2 }}>{cat.sectorName}</div>
-                <div style={{ fontSize: 9, color: "#555" }}>MC {formatNum(cat.market_cap)}</div>
-                <div style={{ fontSize: 9, color: "#555", marginTop: 1 }}>Vol {formatNum(cat.volume_24h)}</div>
+                <div style={{ fontSize: 9, color: "#bbb" }}>MC {formatNum(cat.market_cap)}</div>
+                <div style={{ fontSize: 9, color: "#bbb", marginTop: 1 }}>Vol {formatNum(cat.volume_24h)}</div>
               </div>
             );
           })}
@@ -653,7 +653,7 @@ export default function CryptoFundFlow() {
       {/* Selected Sector Top Coins */}
       {selectedSector && selectedCoinsData && (
         <div style={{ padding: "8px 16px 12px", animation: "slideUp 0.3s ease" }}>
-          <div style={{ fontSize: 10, color: "#444", fontWeight: 600, letterSpacing: "0.12em", marginBottom: 8 }}>
+          <div style={{ fontSize: 10, color: "#aaa", fontWeight: 600, letterSpacing: "0.12em", marginBottom: 8 }}>
             {enrichedCategories.find(c => c.id === selectedSector)?.icon}{" "}
             {enrichedCategories.find(c => c.id === selectedSector)?.sectorName} — TOP 5 代幣
           </div>
@@ -663,14 +663,14 @@ export default function CryptoFundFlow() {
                 display: "flex", alignItems: "center", gap: 8, padding: "8px 10px",
                 background: "#0f0f1a", borderRadius: 8, border: "1px solid #1a1a2e",
               }}>
-                <span style={{ fontSize: 10, color: "#444", fontWeight: 600, width: 14 }}>{i + 1}</span>
+                <span style={{ fontSize: 10, color: "#aaa", fontWeight: 600, width: 14 }}>{i + 1}</span>
                 {coin.image && (
                   <img src={coin.image} alt="" style={{ width: 20, height: 20, borderRadius: "50%" }}
                     onError={e => { e.target.style.display = "none"; }} />
                 )}
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: "#ddd" }}>{coin.symbol?.toUpperCase()}</div>
-                  <div style={{ fontSize: 9, color: "#555" }}>{coin.name}</div>
+                  <div style={{ fontSize: 9, color: "#bbb" }}>{coin.name}</div>
                 </div>
                 <div style={{ textAlign: "right", minWidth: 65 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: "#ccc", fontFamily: "'JetBrains Mono', monospace" }}>
@@ -696,13 +696,13 @@ export default function CryptoFundFlow() {
             borderTop: "2px solid #00D4AA", borderRadius: "50%",
             animation: "spin 0.8s linear infinite",
           }} />
-          <span style={{ fontSize: 12, color: "#555" }}>載入代幣數據中（約 10 秒）...</span>
+          <span style={{ fontSize: 12, color: "#bbb" }}>載入代幣數據中（約 10 秒）...</span>
         </div>
       )}
 
       {/* Net Flow Bar */}
       <div style={{ padding: "12px 16px" }}>
-        <div style={{ fontSize: 10, color: "#444", fontWeight: 600, letterSpacing: "0.12em", marginBottom: 10 }}>
+        <div style={{ fontSize: 10, color: "#aaa", fontWeight: 600, letterSpacing: "0.12em", marginBottom: 10 }}>
           24H 淨資金流向（基於市值變化）
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -750,19 +750,19 @@ export default function CryptoFundFlow() {
           <div style={{
             display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10,
           }}>
-            <div style={{ fontSize: 10, color: "#444", fontWeight: 600, letterSpacing: "0.12em" }}>
+            <div style={{ fontSize: 10, color: "#aaa", fontWeight: 600, letterSpacing: "0.12em" }}>
               {selectedSector
                 ? `${enrichedCategories.find(c => c.id === selectedSector)?.icon} ${enrichedCategories.find(c => c.id === selectedSector)?.sectorName} 相關流動`
                 : "推測板塊間資金流動"}
             </div>
             {selectedSector && (
               <button onClick={() => setSelectedSector(null)} style={{
-                fontSize: 10, color: "#666", background: "#151520", border: "1px solid #222",
+                fontSize: 10, color: "#ccc", background: "#151520", border: "1px solid #222",
                 padding: "3px 10px", borderRadius: 12, cursor: "pointer",
               }}>清除篩選</button>
             )}
           </div>
-          <div style={{ fontSize: 9, color: "#333", marginBottom: 8, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 9, color: "#e0e0e0", marginBottom: 8, lineHeight: 1.5 }}>
             💡 流動方向根據板塊 24h 市值增減推算：市值下降的板塊 → 市值上升的板塊
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -770,7 +770,7 @@ export default function CryptoFundFlow() {
               <FlowArrow key={`${flow.from}-${flow.to}-${i}`} flow={flow} sectors={enrichedCategories} maxAmount={maxFlow} />
             ))}
             {filteredFlows.length === 0 && (
-              <div style={{ fontSize: 12, color: "#444", textAlign: "center", padding: 20 }}>
+              <div style={{ fontSize: 12, color: "#aaa", textAlign: "center", padding: 20 }}>
                 此篩選無明顯流動
               </div>
             )}
@@ -783,7 +783,7 @@ export default function CryptoFundFlow() {
         padding: "16px", borderTop: "1px solid #1a1a2e",
         display: "flex", flexDirection: "column", gap: 4,
       }}>
-        <div style={{ fontSize: 9, color: "#333", display: "flex", justifyContent: "space-between" }}>
+        <div style={{ fontSize: 9, color: "#e0e0e0", display: "flex", justifyContent: "space-between" }}>
           <span>數據來源：CoinGecko API via Anthropic</span>
           <span>{enrichedCategories.length} 個板塊</span>
         </div>
